@@ -35,3 +35,12 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+# Docker
+.env
+spark-apps/
+
+# Spark
+metastore_db/
+derby.log
+spark-warehouse/

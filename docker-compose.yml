@@ -1,0 +1,39 @@
+services:
+  spark:
+    build: .
+    image: spark-3.5:latest
+    restart: always
+    hostname: localhost
+    network_mode: "host"
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=${SPARK_MODE:-master}
+      - SPARK_RPC_AUTHENTICATION_ENABLED=${SPARK_RPC_AUTHENTICATION_ENABLED:-no}
+      - SPARK_RPC_ENCRYPTION_ENABLED=${SPARK_RPC_ENCRYPTION_ENABLED:-no}
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=${SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED:-no}
+      - SPARK_SSL_ENABLED=${SPARK_SSL_ENABLED:-no}
+      - SPARK_MASTER_HOST=${SPARK_MASTER_HOST:-localhost}
+      - SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_WEBUI_PORT:-8080}
+      - PYSPARK_PYTHON=${PYSPARK_PYTHON:-python3}
+    volumes:
+      - spark-data:/opt/spark/data
+      - ./spark-apps:/opt/spark/apps
+  
+  spark-worker:
+    build: .
+    image: spark-3.5:latest
+    container_name: spark-worker
+    restart: always
+    network_mode: "host"
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=${SPARK_MASTER_URL:-spark://localhost:7077}
+      - SPARK_WORKER_WEBUI_PORT=${SPARK_WORKER_WEBUI_PORT:-8081}
+      - PYSPARK_PYTHON=${PYSPARK_PYTHON:-python3}
+    depends_on:
+      - spark
+    volumes:
+      - ./spark-apps:/opt/spark/apps
+
+volumes:
+  spark-data:
