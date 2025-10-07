@@ -6,12 +6,13 @@ This image provides the same features as bitnami/spark:3.5, including master/wor
 
 ## Contents
 
-- **Dockerfile**: Ubuntu-based Docker image with Apache Spark 3.5.3 and curl installed
+- **Dockerfile**: Hardened Ubuntu-based Docker image with Apache Spark 3.5.3 (multi-stage build, non-root user)
 - **requirements.txt**: Python dependencies (pyspark==3.5.6)
 - **build_and_test.sh**: Shell script to test PySpark compatibility using a virtual environment
 - **entrypoint.sh**: Entry point script to start Spark in master or worker mode
 - **docker-compose.yml**: Docker Compose configuration for multi-node setup
 - **.env.example**: Example environment variables configuration
+- **.dockerignore**: Excludes unnecessary files from Docker build context
 
 ## Features
 
@@ -19,11 +20,17 @@ This image provides the same features as bitnami/spark:3.5, including master/wor
 - Apache Spark 3.5.3 with Hadoop 3
 - Python 3 with virtual environment support
 - curl utility pre-installed
-- OpenJDK 11 for Spark
+- OpenJDK 11 JRE (runtime-only, no compiler/dev tools)
 - **Master/Worker mode support** - Run as Spark master or worker
 - **Configurable security** - RPC authentication, encryption, SSL
 - **Volume support** - Mount data and application directories
 - **Environment-based configuration** - Fully configurable via environment variables
+- **Security hardened**:
+  - Multi-stage build (build tools not included in final image)
+  - Runs as non-root user (spark user, UID/GID 1001)
+  - Minimal runtime dependencies (no wget, no compilers)
+  - Proper file permissions and ownership
+  - Uses JRE instead of JDK for smaller attack surface
 
 ## Building the Docker Image
 
@@ -102,8 +109,10 @@ docker run -d \
 docker run -it \
   -e SPARK_MODE=master \
   spark-3.5:latest \
-  /bin/bash
+  bash
 ```
+
+Note: The container runs as the non-root `spark` user by default.
 
 ## Testing PySpark Compatibility
 
@@ -168,6 +177,50 @@ This image provides equivalent functionality to `bitnami/spark:3.5`:
 | Environment Configuration | ✓ | ✓ |
 | PySpark Support | ✓ | ✓ (3.5.6) |
 | Web UI | ✓ | ✓ |
+
+## Security Hardening
+
+This image has been hardened following Docker security best practices:
+
+### Multi-Stage Builds
+The Dockerfile uses a two-stage build process:
+- **Build stage**: Downloads and extracts Spark with minimal tools (wget, ca-certificates)
+- **Runtime stage**: Only includes runtime dependencies, excluding build tools
+
+This approach significantly reduces the final image size and attack surface.
+
+### Non-Root User
+The image runs as a non-root user `spark` (UID/GID 1001) instead of root. All Spark processes, files, and directories are owned by this user.
+
+To access the container as the spark user:
+```bash
+docker exec -it -u spark spark-master bash
+```
+
+### Minimal Runtime Dependencies
+- Uses `openjdk-11-jre-headless` (JRE only) instead of full JDK
+- Installs packages with `--no-install-recommends` flag
+- Removes `wget` and other build tools from runtime image
+- Cleans up apt cache and lists to reduce image size
+
+### Proper File Permissions
+All Spark directories (`/opt/spark/*`, `/workspace`) are owned by the spark user with appropriate permissions.
+
+### Scanning for Vulnerabilities
+You can scan this image for vulnerabilities using free tools:
+
+```bash
+# Using Trivy
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+  aquasec/trivy image spark-3.5:latest
+
+# Using Grype
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+  anchore/grype:latest spark-3.5:latest
+```
+
+### Build Context Optimization
+A `.dockerignore` file excludes unnecessary files from the build context (git files, documentation, virtual environments, etc.), reducing build time and preventing sensitive files from being included.
 
 ## Example: Submitting a Spark Application
 
