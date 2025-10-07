@@ -38,6 +38,24 @@ This image provides the same features as bitnami/spark:3.5, including master/wor
 docker build -t spark-3.5:latest .
 ```
 
+### Keeping the Image Updated
+
+To keep your image secure with the latest patches:
+
+1. Regularly rebuild the image to get latest base image updates:
+```bash
+docker build --no-cache -t spark-3.5:latest .
+```
+
+2. Monitor for security advisories:
+   - Ubuntu security updates: https://ubuntu.com/security/notices
+   - Apache Spark security: https://spark.apache.org/security.html
+   - Java/OpenJDK updates: Check Ubuntu repositories for JRE updates
+
+3. Automate builds with CI/CD:
+   - Set up scheduled builds (e.g., weekly) in your CI/CD pipeline
+   - Run vulnerability scans as part of your build process
+
 ## Running with Docker Compose
 
 ### Setup
@@ -221,6 +239,37 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
 
 ### Build Context Optimization
 A `.dockerignore` file excludes unnecessary files from the build context (git files, documentation, virtual environments, etc.), reducing build time and preventing sensitive files from being included.
+
+### Image Signing and Verification (Optional)
+
+For production use, consider signing and verifying your images:
+
+#### Using Docker Content Trust (DCT)
+```bash
+# Enable Docker Content Trust
+export DOCKER_CONTENT_TRUST=1
+
+# Push signed image
+docker push your-registry/spark-3.5:latest
+
+# Pull and verify signed image
+docker pull your-registry/spark-3.5:latest
+```
+
+#### Using Cosign
+```bash
+# Install cosign (if not already installed)
+# See https://docs.sigstore.dev/cosign/installation/
+
+# Generate key pair (first time only)
+cosign generate-key-pair
+
+# Sign the image
+cosign sign --key cosign.key your-registry/spark-3.5:latest
+
+# Verify the image
+cosign verify --key cosign.pub your-registry/spark-3.5:latest
+```
 
 ## Example: Submitting a Spark Application
 
