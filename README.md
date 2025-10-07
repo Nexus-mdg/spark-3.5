@@ -13,6 +13,7 @@ This image provides the same features as bitnami/spark:3.5, including master/wor
 - **docker-compose.yml**: Docker Compose configuration for multi-node setup
 - **.env.example**: Example environment variables configuration
 - **.dockerignore**: Excludes unnecessary files from Docker build context
+- **SECURITY.md**: Detailed documentation of security improvements and best practices
 
 ## Features
 
@@ -281,6 +282,10 @@ docker exec spark-master spark-submit \
   --master spark://localhost:7077 \
   /opt/spark/apps/your_app.py
 ```
+
+## Security
+
+For detailed information about security hardening and best practices, see [SECURITY.md](SECURITY.md).
 
 ## License
 
