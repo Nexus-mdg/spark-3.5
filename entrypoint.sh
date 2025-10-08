@@ -57,25 +57,25 @@ echo "Starting Spark in ${SPARK_MODE} mode..."
 if [ "${SPARK_MODE}" = "master" ]; then
     echo "Starting Spark Master on ${SPARK_MASTER_HOST}:${SPARK_MASTER_PORT}"
     echo "Web UI will be available on port ${SPARK_MASTER_WEBUI_PORT}"
-    
-    exec ${SPARK_HOME}/sbin/start-master.sh \
+
+    ${SPARK_HOME}/sbin/start-master.sh \
         --host ${SPARK_MASTER_HOST} \
         --port ${SPARK_MASTER_PORT} \
         --webui-port ${SPARK_MASTER_WEBUI_PORT}
-    
+
     # Keep container running
-    tail -f ${SPARK_HOME}/logs/*master*.out
+    exec tail -f ${SPARK_HOME}/logs/*master*.out
 
 elif [ "${SPARK_MODE}" = "worker" ]; then
     echo "Starting Spark Worker connecting to ${SPARK_MASTER_URL}"
     echo "Worker Web UI will be available on port ${SPARK_WORKER_WEBUI_PORT}"
-    
-    exec ${SPARK_HOME}/sbin/start-worker.sh \
+
+    ${SPARK_HOME}/sbin/start-worker.sh \
         ${SPARK_MASTER_URL} \
         --webui-port ${SPARK_WORKER_WEBUI_PORT}
-    
+
     # Keep container running
-    tail -f ${SPARK_HOME}/logs/*worker*.out
+    exec tail -f ${SPARK_HOME}/logs/*worker*.out
 
 else
     echo "Invalid SPARK_MODE: ${SPARK_MODE}. Must be 'master' or 'worker'"

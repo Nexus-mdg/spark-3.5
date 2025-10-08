@@ -57,3 +57,24 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        load: true
+
+    - name: Test Spark Master container
+      run: |
+        docker run -d --name test-spark-master -e SPARK_MODE=master ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        sleep 10
+        docker ps | grep test-spark-master
+        docker logs test-spark-master
+        docker stop test-spark-master
+        docker rm test-spark-master
+
+    - name: Test Spark Worker container
+      run: |
+        docker run -d --name test-spark-master-for-worker -e SPARK_MODE=master ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        sleep 5
+        docker run -d --name test-spark-worker -e SPARK_MODE=worker -e SPARK_MASTER_URL=spark://172.17.0.1:7077 --network host ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        sleep 10
+        docker ps | grep test-spark-worker
+        docker logs test-spark-worker
+        docker stop test-spark-worker test-spark-master-for-worker
+        docker rm test-spark-worker test-spark-master-for-worker
