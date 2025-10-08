@@ -21,11 +21,16 @@ mkdir -p /opt/spark/data
 mkdir -p /opt/spark/apps
 mkdir -p /opt/spark/work
 mkdir -p /opt/spark/logs
+mkdir -p /opt/spark/conf
 
 # Set Spark configuration based on environment variables
 SPARK_CONF_FILE="${SPARK_HOME}/conf/spark-defaults.conf"
 if [ ! -f "${SPARK_CONF_FILE}" ]; then
-    cp "${SPARK_HOME}/conf/spark-defaults.conf.template" "${SPARK_CONF_FILE}" 2>/dev/null || touch "${SPARK_CONF_FILE}"
+    if [ -f "${SPARK_HOME}/conf/spark-defaults.conf.template" ]; then
+        cp "${SPARK_HOME}/conf/spark-defaults.conf.template" "${SPARK_CONF_FILE}"
+    else
+        touch "${SPARK_CONF_FILE}"
+    fi
 fi
 
 # Configure RPC authentication
@@ -63,8 +68,18 @@ if [ "${SPARK_MODE}" = "master" ]; then
         --port ${SPARK_MASTER_PORT} \
         --webui-port ${SPARK_MASTER_WEBUI_PORT}
 
-    # Keep container running
-    tail -f ${SPARK_HOME}/logs/*master*.out
+    # Keep container running - wait for log file to be created
+    echo "Waiting for master log file..."
+    for i in {1..30}; do
+        if ls ${SPARK_HOME}/logs/*master*.out 1> /dev/null 2>&1; then
+            tail -f ${SPARK_HOME}/logs/*master*.out
+            break
+        fi
+        sleep 1
+    done
+    # If no log file found after 30 seconds, keep container alive anyway
+    echo "Master process started. Keeping container running..."
+    tail -f /dev/null
 
 elif [ "${SPARK_MODE}" = "worker" ]; then
     echo "Starting Spark Worker connecting to ${SPARK_MASTER_URL}"
@@ -74,8 +89,18 @@ elif [ "${SPARK_MODE}" = "worker" ]; then
         ${SPARK_MASTER_URL} \
         --webui-port ${SPARK_WORKER_WEBUI_PORT}
 
-    # Keep container running
-    tail -f ${SPARK_HOME}/logs/*worker*.out
+    # Keep container running - wait for log file to be created
+    echo "Waiting for worker log file..."
+    for i in {1..30}; do
+        if ls ${SPARK_HOME}/logs/*worker*.out 1> /dev/null 2>&1; then
+            tail -f ${SPARK_HOME}/logs/*worker*.out
+            break
+        fi
+        sleep 1
+    done
+    # If no log file found after 30 seconds, keep container alive anyway
+    echo "Worker process started. Keeping container running..."
+    tail -f /dev/null
 
 else
     echo "Invalid SPARK_MODE: ${SPARK_MODE}. Must be 'master' or 'worker'"

@@ -70,7 +70,7 @@ RUN groupadd -r spark --gid=1001 && \
     chown -R spark:spark /home/spark
 
 # Create necessary directories with proper ownership
-RUN mkdir -p /opt/spark/data /opt/spark/apps /opt/spark/work /opt/spark/logs && \
+RUN mkdir -p /opt/spark/data /opt/spark/apps /opt/spark/work /opt/spark/logs /opt/spark/conf && \
     chown -R spark:spark /opt/spark
 
 # Create working directory
