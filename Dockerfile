@@ -25,7 +25,8 @@ RUN wget -q https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-$
 # Stage 2: Runtime stage - minimal final image
 FROM ubuntu:22.04
 
-# Set environment variables
+# Set environment variables to avoid interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
 ENV SPARK_VERSION=3.5.3
 ENV HADOOP_VERSION=3
 ENV SPARK_HOME=/opt/spark
@@ -39,6 +40,7 @@ ENV SPARK_MASTER_PORT=7077
 ENV SPARK_MASTER_WEBUI_PORT=8080
 ENV SPARK_WORKER_WEBUI_PORT=8081
 ENV PYSPARK_PYTHON=python3
+ENV TZ=UTC
 
 # Install only runtime dependencies (no wget, use JRE instead of JDK, minimal packages)
 RUN apt-get update && \
@@ -52,7 +54,9 @@ RUN apt-get update && \
     openjdk-11-jre-headless \
     python3.12 \
     python3.12-venv \
-    procps && \
+    procps \
+    tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
