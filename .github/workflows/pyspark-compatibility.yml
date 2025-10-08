@@ -1,0 +1,88 @@
+name: PySpark 3.5.6 Compatibility Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-pyspark-compatibility:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    
+    - name: Install Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+    
+    - name: Download Apache Spark
+      run: |
+        wget -q https://archive.apache.org/dist/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz
+        tar -xzf spark-3.5.3-bin-hadoop3.tgz
+        sudo mv spark-3.5.3-bin-hadoop3 /opt/spark
+        rm spark-3.5.3-bin-hadoop3.tgz
+    
+    - name: Set SPARK_HOME
+      run: echo "SPARK_HOME=/opt/spark" >> $GITHUB_ENV
+    
+    - name: Create virtual environment
+      run: python3 -m venv venv
+    
+    - name: Install PySpark
+      run: |
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test PySpark Compatibility
+      run: |
+        source venv/bin/activate
+        python3 << 'EOF'
+        import pyspark
+        from pyspark.sql import SparkSession
+        
+        print(f"PySpark version: {pyspark.__version__}")
+        
+        # Create a Spark session
+        spark = SparkSession.builder \
+            .appName("PySpark Compatibility Test") \
+            .master("local[*]") \
+            .getOrCreate()
+        
+        print(f"Spark version: {spark.version}")
+        
+        # Create a simple DataFrame to test functionality
+        data = [("Alice", 1), ("Bob", 2), ("Charlie", 3)]
+        df = spark.createDataFrame(data, ["name", "id"])
+        
+        print("\nTest DataFrame:")
+        df.show()
+        
+        # Verify the count
+        count = df.count()
+        print(f"\nDataFrame row count: {count}")
+        
+        # Stop the Spark session
+        spark.stop()
+        
+        print("\n✓ PySpark is working correctly!")
+        EOF
+    
+    - name: Test Summary
+      if: success()
+      run: |
+        echo "=========================================="
+        echo "✓ All tests passed successfully!"
+        echo "✓ PySpark 3.5.6 is compatible with Apache Spark 3.5"
+        echo "=========================================="

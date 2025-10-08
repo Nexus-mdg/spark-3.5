@@ -1,5 +1,8 @@
 # spark-3.5
 
+[![PySpark 3.5.6 Compatibility Test](https://github.com/Nexus-mdg/spark-3.5/actions/workflows/pyspark-compatibility.yml/badge.svg)](https://github.com/Nexus-mdg/spark-3.5/actions/workflows/pyspark-compatibility.yml)
+[![Build and Push Docker Image](https://github.com/Nexus-mdg/spark-3.5/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Nexus-mdg/spark-3.5/actions/workflows/docker-build.yml)
+
 Docker image for Apache Spark 3.5 with PySpark 3.5.6 compatibility testing.
 
 This image provides the same features as bitnami/spark:3.5, including master/worker mode support, security configurations, and volume mounting.
@@ -33,11 +36,64 @@ This image provides the same features as bitnami/spark:3.5, including master/wor
   - Proper file permissions and ownership
   - Uses JRE instead of JDK for smaller attack surface
 
+## Using the Pre-built Docker Image
+
+Pull the pre-built image from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/nexus-mdg/spark-3.5:latest
+```
+
+Available tags:
+- `latest` - Latest build from main branch
+- `main` - Latest build from main branch
+- `v*` - Specific version tags (e.g., `v3.5.3`)
+
+### Using the Image
+
+Once pulled, you can use it like the locally built image:
+
+```bash
+# Run as Spark Master
+docker run -d \
+  --name spark-master \
+  --network host \
+  -e SPARK_MODE=master \
+  ghcr.io/nexus-mdg/spark-3.5:latest
+
+# Run as Spark Worker
+docker run -d \
+  --name spark-worker \
+  --network host \
+  -e SPARK_MODE=worker \
+  -e SPARK_MASTER_URL=spark://localhost:7077 \
+  ghcr.io/nexus-mdg/spark-3.5:latest
+```
+
 ## Building the Docker Image
+
+If you prefer to build the image locally:
 
 ```bash
 docker build -t spark-3.5:latest .
 ```
+
+### Publishing Your Own Image
+
+To push your own version to GitHub Container Registry:
+
+```bash
+# Tag your image
+docker tag spark-3.5:latest ghcr.io/your-username/spark-3.5:latest
+
+# Log in to GitHub Container Registry
+echo $GITHUB_TOKEN | docker login ghcr.io -u your-username --password-stdin
+
+# Push the image
+docker push ghcr.io/your-username/spark-3.5:latest
+```
+
+Note: Replace `your-username` with your GitHub username and `$GITHUB_TOKEN` with a Personal Access Token that has `write:packages` permission.
 
 ### Keeping the Image Updated
 
