@@ -7,6 +7,8 @@ Docker image for Apache Spark 3.5 with PySpark 3.5.6 compatibility testing.
 
 This image provides the same features as bitnami/spark:3.5, including master/worker mode support, security configurations, and volume mounting.
 
+> **Recent Updates**: Fixed Spark access issues with improved conf directory permissions and robust log monitoring. See [CHANGELOG.md](CHANGELOG.md) and [FIXES.md](FIXES.md) for details.
+
 ## Contents
 
 - **Dockerfile**: Hardened Ubuntu-based Docker image with Apache Spark 3.5.3 (multi-stage build, non-root user)
@@ -17,6 +19,9 @@ This image provides the same features as bitnami/spark:3.5, including master/wor
 - **.env.example**: Example environment variables configuration
 - **.dockerignore**: Excludes unnecessary files from Docker build context
 - **SECURITY.md**: Detailed documentation of security improvements and best practices
+- **CHANGELOG.md**: Project changelog with all notable changes
+- **FIXES.md**: Technical documentation of recent Spark access fixes
+- **BUILD_PUSH_GUIDE.md**: Guide for rebuilding and pushing Docker images
 
 ## Features
 
