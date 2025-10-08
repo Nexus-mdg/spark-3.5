@@ -43,12 +43,17 @@ ENV PYSPARK_PYTHON=python3
 # Install only runtime dependencies (no wget, use JRE instead of JDK, minimal packages)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    software-properties-common \
+    gnupg && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
     curl \
     openjdk-11-jre-headless \
-    python3 \
-    python3-pip \
-    python3-venv \
+    python3.12 \
+    python3.12-venv \
     procps && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
